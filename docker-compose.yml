@@ -1,0 +1,158 @@
+﻿services:
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: expense_user
+      POSTGRES_PASSWORD: StrongPassword@2026!
+      POSTGRES_DB: expense_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - backend_net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dtc245200228@ictu.edu.vn
+      PGADMIN_DEFAULT_PASSWORD: AdminPassword@2026!
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres_db
+    networks:
+      - backend_net
+      - frontend_net
+
+  expense_app:
+    build: ./app
+    container_name: expense_app
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres_db
+      DB_PORT: 5432
+      DB_USER: expense_user
+      DB_PASSWORD: StrongPassword@2026!
+      DB_NAME: expense_db
+    depends_on:
+      - postgres_db
+    networks:
+      - backend_net
+      - frontend_net
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    restart: unless-stopped
+    ports:
+      - "8088:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - expense_app
+    networks:
+      - frontend_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=GrafanaPassword@2026!
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring_net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - monitoring_net
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:1.1.0
+    container_name: nginx_exporter
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://nginx:80/nginx_status
+    depends_on:
+      - nginx
+    networks:
+      - frontend_net
+      - monitoring_net
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://expense_user:StrongPassword@2026!@postgres_db:5432/expense_db?sslmode=disable"
+    depends_on:
+      - postgres_db
+    networks:
+      - backend_net
+      - monitoring_net
+
+  loki:
+    image: grafana/loki:2.9.2
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring_net
+
+  promtail:
+    image: grafana/promtail:2.9.2
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./loki/promtail-config.yaml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring_net
+
+networks:
+  frontend_net:
+    driver: bridge
+  backend_net:
+    driver: bridge
+    internal: true
+  monitoring_net:
+    driver: bridge
+
+volumes:
+  pg_data:

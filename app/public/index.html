@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Hệ thống Quản lý Chi tiêu cá nhân và gia đình - Expense Tracker. Theo dõi giao dịch, danh mục, báo cáo tài chính." />
+  <title>Đề 38 – Expense Tracker | Quản lý Chi tiêu</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ===== TOPBAR (NAVBAR) ===== -->
+  <header class="navbar" id="navbar">
+    <div class="navbar-brand">
+      <div class="brand-icon">💰</div>
+      <div class="brand-text">
+        <span class="brand-title">Hệ Thống Quản Lý Chi Tiêu</span>
+        <span class="brand-sub">Đề 38</span>
+      </div>
+    </div>
+
+    <!-- Hamburger for mobile -->
+    <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="navbar-nav" id="navbarNav">
+      <a href="#" class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard', this)">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Tổng quan</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-transactions" onclick="showPage('transactions', this)">
+        <span class="nav-icon">💳</span>
+        <span class="nav-label">Giao dịch</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-categories" onclick="showPage('categories', this)">
+        <span class="nav-icon">🏷️</span>
+        <span class="nav-label">Danh mục</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-reports" onclick="showPage('reports', this)">
+        <span class="nav-icon">📈</span>
+        <span class="nav-label">Báo cáo</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-stack" onclick="showPage('stack', this)">
+        <span class="nav-icon">🛠️</span>
+        <span class="nav-label">Tech Stack</span>
+      </a>
+    </nav>
+
+    <div class="navbar-right">
+      <div class="month-selector">
+        <button onclick="changeMonth(-1)" aria-label="Tháng trước">&#8249;</button>
+        <span id="currentMonth">Tháng 10 / 2026</span>
+        <button onclick="changeMonth(1)" aria-label="Tháng sau">&#8250;</button>
+      </div>
+      <div class="user-avatar" title="Người dùng">NT</div>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="main-wrapper">
+
+    <!-- ===== PAGE: DASHBOARD ===== -->
+    <main class="page active" id="page-dashboard">
+      <!-- Summary Cards -->
+      <section class="cards-grid">
+        <div class="card card-income" id="card-income">
+          <div class="card-label">Thu nhập</div>
+          <div class="card-amount" id="totalIncome">+15,500,000 ₫</div>
+          <div class="card-change">▲ 8.2% so với tháng trước</div>
+          <div class="card-icon-bg">💵</div>
+        </div>
+        <div class="card card-expense" id="card-expense">
+          <div class="card-label">Chi tiêu</div>
+          <div class="card-amount" id="totalExpense">−9,320,000 ₫</div>
+          <div class="card-change">▼ 3.1% so với tháng trước</div>
+          <div class="card-icon-bg">🛒</div>
+        </div>
+        <div class="card card-balance" id="card-balance">
+          <div class="card-label">Số dư</div>
+          <div class="card-amount" id="totalBalance">6,180,000 ₫</div>
+          <div class="card-change">▲ Tiết kiệm tốt!</div>
+          <div class="card-icon-bg">🏦</div>
+        </div>
+        <div class="card card-saving" id="card-saving">
+          <div class="card-label">Tiết kiệm</div>
+          <div class="card-amount">39.9%</div>
+          <div class="card-change">Tỉ lệ tiết kiệm tháng này</div>
+          <div class="card-icon-bg">🎯</div>
+        </div>
+      </section>
+
+      <!-- Chart + Pie -->
+      <div class="dashboard-grid">
+        <div class="glass-box chart-box">
+          <div class="box-header">
+            <h2>Chi tiêu 6 tháng gần nhất</h2>
+            <div class="legend">
+              <span class="dot income-dot"></span>Thu nhập
+              <span class="dot expense-dot"></span>Chi tiêu
+            </div>
+          </div>
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+
+        <div class="glass-box pie-box">
+          <div class="box-header">
+            <h2>Phân bổ danh mục</h2>
+          </div>
+          <div class="pie-chart-wrap">
+            <svg class="pie-svg" viewBox="0 0 160 160" id="pieSvg"></svg>
+            <div class="pie-legend" id="pieLegend"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="glass-box">
+        <div class="box-header">
+          <h2>Giao dịch gần đây</h2>
+          <button class="btn-link" onclick="showPage('transactions', document.getElementById('nav-transactions'))">Xem
+            tất cả →</button>
+        </div>
+        <div class="txn-list" id="recentTxns"></div>
+      </div>
+    </main>
+
+    <!-- ===== PAGE: TRANSACTIONS ===== -->
+    <main class="page" id="page-transactions">
+      <div class="glass-box">
+        <div class="box-header">
+          <h2>Danh sách Giao dịch</h2>
+          <button class="btn-primary" onclick="openModal()">+ Thêm giao dịch</button>
+        </div>
+        <div class="filter-bar">
+          <input type="text" class="search-input" id="searchInput" placeholder="🔍 Tìm kiếm..."
+            oninput="filterTxns()" />
+          <select class="filter-select" id="filterType" onchange="filterTxns()">
+            <option value="">Tất cả loại</option>
+            <option value="income">Thu nhập</option>
+            <option value="expense">Chi tiêu</option>
+          </select>
+          <select class="filter-select" id="filterCat" onchange="filterTxns()">
+            <option value="">Tất cả danh mục</option>
+          </select>
+        </div>
+        <table class="txn-table" id="txnTable">
+          <thead>
+            <tr>
+              <th>Ngày</th>
+              <th>Mô tả</th>
+              <th>Danh mục</th>
+              <th>Loại</th>
+              <th>Số tiền</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="txnTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- ===== PAGE: CATEGORIES ===== -->
+    <main class="page" id="page-categories">
+      <div class="glass-box">
+        <div class="box-header">
+          <h2>Quản lý Danh mục</h2>
+          <button class="btn-primary" onclick="openCatModal()">+ Thêm danh mục</button>
+        </div>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+    </main>
+
+    <!-- ===== PAGE: REPORTS ===== -->
+    <main class="page" id="page-reports">
+      <div class="glass-box" style="margin-bottom:0">
+        <div class="box-header">
+          <h2>📋 Báo cáo Tài chính</h2>
+        </div>
+        <div class="report-summary" id="reportSummary"></div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="glass-box">
+          <div class="box-header">
+            <h2>Chi tiêu theo danh mục</h2>
+          </div>
+          <div id="reportBars"></div>
+        </div>
+        <div class="glass-box">
+          <div class="box-header">
+            <h2>Xu hướng hàng tháng</h2>
+          </div>
+          <div class="line-chart-wrap" id="lineChart"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== PAGE: TECH STACK ===== -->
+    <main class="page" id="page-stack">
+      <div class="stack-hero glass-box">
+        <div class="stack-badge">Đề 38</div>
+        <h1 class="stack-title">Hệ thống Quản lý Chi tiêu</h1>
+        <p class="stack-subtitle">Expense Tracker</p>
+        <p class="stack-desc">Ứng dụng theo dõi chi tiêu cá nhân/gia đình với đầy đủ tính năng giao dịch, danh mục và
+          báo cáo.</p>
+      </div>
+
+      <div class="stack-grid">
+        <div class="stack-card">
+          <div class="stack-icon">🗄️</div>
+          <div class="stack-info">
+            <div class="stack-name">Cơ sở dữ liệu</div>
+            <div class="stack-tech">PostgreSQL + pgAdmin</div>
+            <div class="stack-desc-sm">Lưu trữ giao dịch, danh mục, người dùng với hiệu năng cao.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">⚙️</div>
+          <div class="stack-info">
+            <div class="stack-name">Backend</div>
+            <div class="stack-tech">Node.js / Python</div>
+            <div class="stack-desc-sm">REST API xử lý business logic, xác thực và phân quyền.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">🌐</div>
+          <div class="stack-info">
+            <div class="stack-name">Reverse Proxy</div>
+            <div class="stack-tech">Nginx</div>
+            <div class="stack-desc-sm">Load balancing, SSL termination, bảo mật đầu vào.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">📡</div>
+          <div class="stack-info">
+            <div class="stack-name">Monitoring</div>
+            <div class="stack-tech">Prometheus + Grafana</div>
+            <div class="stack-desc-sm">Thu thập metrics, hiển thị dashboard giám sát hệ thống.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">📝</div>
+          <div class="stack-info">
+            <div class="stack-name">Logging</div>
+            <div class="stack-tech">Loki + LogQL</div>
+            <div class="stack-desc-sm">Tổng hợp log tập trung, truy vấn và phân tích lỗi.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">🔒</div>
+          <div class="stack-info">
+            <div class="stack-name">Bảo mật</div>
+            <div class="stack-tech">Hardening</div>
+            <div class="stack-desc-sm">Firewall, HTTPS, JWT auth, rate limiting, input validation.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">🐙</div>
+          <div class="stack-info">
+            <div class="stack-name">Version Control</div>
+            <div class="stack-tech">GitHub</div>
+            <div class="stack-desc-sm">CI/CD pipeline, pull requests, code review workflow.</div>
+          </div>
+        </div>
+        <div class="stack-card">
+          <div class="stack-icon">🖥️</div>
+          <div class="stack-info">
+            <div class="stack-name">Frontend</div>
+            <div class="stack-tech">HTML / CSS / JavaScript</div>
+            <div class="stack-desc-sm">Giao diện người dùng tương tác, responsive design.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-box req-box">
+        <div class="box-header">
+          <h2>📋 Yêu cầu Kỹ thuật</h2>
+        </div>
+        <ul class="req-list">
+          <li>✅ Quản lý giao dịch thu/chi với danh mục linh hoạt</li>
+          <li>✅ Báo cáo thống kê theo tháng, quý, năm</li>
+          <li>✅ PostgreSQL làm cơ sở dữ liệu chính + pgAdmin quản trị</li>
+          <li>✅ Nginx reverse proxy phục vụ frontend + backend</li>
+          <li>✅ Giám sát hệ thống với Prometheus + Grafana dashboard</li>
+          <li>✅ Log tập trung bằng Loki + LogQL queries</li>
+          <li>✅ Bảo mật: HTTPS, JWT, Hardening server</li>
+          <li>✅ Source code quản lý trên GitHub với CI/CD</li>
+        </ul>
+      </div>
+    </main>
+
+  </div><!-- /main-wrapper -->
+
+  <!-- ===== MODAL: ADD TRANSACTION ===== -->
+  <div class="modal-overlay" id="txnModal" onclick="closeModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Thêm Giao dịch</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <form id="txnForm" onsubmit="addTransaction(event)">
+        <div class="form-group">
+          <label>Loại giao dịch</label>
+          <div class="type-toggle">
+            <button type="button" class="type-btn active" id="typeBtnIncome" onclick="setType('income')">💵 Thu
+              nhập</button>
+            <button type="button" class="type-btn" id="typeBtnExpense" onclick="setType('expense')">🛒 Chi tiêu</button>
+          </div>
+          <input type="hidden" id="txnType" value="income" />
+        </div>
+        <div class="form-group">
+          <label for="txnDesc">Mô tả</label>
+          <input type="text" id="txnDesc" placeholder="Nhập mô tả giao dịch..." required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="txnAmount">Số tiền (₫)</label>
+            <input type="number" id="txnAmount" placeholder="0" min="1000" required />
+          </div>
+          <div class="form-group">
+            <label for="txnDate">Ngày</label>
+            <input type="date" id="txnDate" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="txnCat">Danh mục</label>
+          <select id="txnCat" required></select>
+        </div>
+        <div class="form-group">
+          <label for="txnNote">Ghi chú</label>
+          <input type="text" id="txnNote" placeholder="(tùy chọn)" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu giao dịch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: ADD CATEGORY ===== -->
+  <div class="modal-overlay" id="catModal" onclick="closeCatModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Thêm Danh mục</h3>
+        <button class="modal-close" onclick="closeCatModal()">✕</button>
+      </div>
+      <form id="catForm" onsubmit="addCategory(event)">
+        <div class="form-group">
+          <label for="catName">Tên danh mục</label>
+          <input type="text" id="catName" placeholder="VD: Ăn uống, Đi lại..." required />
+        </div>
+        <div class="form-group">
+          <label for="catEmoji">Biểu tượng (emoji)</label>
+          <input type="text" id="catEmoji" placeholder="🍔" maxlength="4" />
+        </div>
+        <div class="form-group">
+          <label for="catColor">Màu sắc</label>
+          <input type="color" id="catColor" value="#6c63ff" />
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="closeCatModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Thêm danh mục</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
